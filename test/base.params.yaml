@@ -1,0 +1,4 @@
+app:
+  name: guestbook
+  tier: frontend
+  version: v4

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.app.name}}
+spec:
+  selector:
+    matchLabels:
+      app: {{.app.name}}
+      tier: {{.app.tier}}
+  replicas: {{.replicas}}
+  template:
+    metadata:
+      labels:
+        app: {{.app.name}}
+        tier: {{.app.tier}}
+    spec:
+      containers:
+        - name: php-redis
+          image: gcr.io/google-samples/gb-frontend:{{.app.version}}
+          resources:
+            requests:
+              cpu: {{.resources.cpu}}
+              memory: {{.resources.memory}}
+          env:
+            - name: GET_HOSTS_FROM
+              value: dns
+          ports:
+            - containerPort: 80
