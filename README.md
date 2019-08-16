@@ -9,7 +9,7 @@ Binary downloads can be found on [releases](https://github.com/tinrab/tmpl/relea
 Or install it manually:
 
 ```
-go get github.com/tinrab/tmpl
+go get github.com/tinrab/tmpl/cmd/tmpl
 ```
 
 ## Usage
