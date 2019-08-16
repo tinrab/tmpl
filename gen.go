@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"html/template"
 	"io/ioutil"
-	"path/filepath"
 )
 
 type Source struct {
@@ -41,33 +40,23 @@ func Generate(options Options) ([]Result, error) {
 	return results, nil
 }
 
-func GenerateFromFiles(parametersGlob string, sourcesGlob string) ([]Result, error) {
-	pFiles, err := filepath.Glob(parametersGlob)
+func GenerateFromFiles(parametersPath string, sourcesPath string) ([]Result, error) {
+	parameterFiles, err := findFiles(parametersPath)
 	if err != nil {
 		return nil, err
 	}
-	pm, err := parseParameterMap(pFiles)
+	sourceFiles, err := findFiles(sourcesPath)
 	if err != nil {
 		return nil, err
 	}
-	sources, err := readSourceGlob(sourcesGlob)
-	if err != nil {
-		return nil, err
-	}
-	options := Options{
-		Parameters: pm,
-		Sources:    sources,
-	}
-	return Generate(options)
-}
 
-func readSourceGlob(glob string) ([]Source, error) {
-	files, err := filepath.Glob(glob)
+	pm, err := parseParameterMap(parameterFiles)
 	if err != nil {
 		return nil, err
 	}
+
 	var sources []Source
-	for _, f := range files {
+	for _, f := range sourceFiles {
 		data, err := ioutil.ReadFile(f)
 		if err != nil {
 			return nil, err
@@ -77,5 +66,10 @@ func readSourceGlob(glob string) ([]Source, error) {
 			Value: string(data),
 		})
 	}
-	return sources, nil
+
+	options := Options{
+		Parameters: pm,
+		Sources:    sources,
+	}
+	return Generate(options)
 }

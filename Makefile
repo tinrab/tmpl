@@ -4,8 +4,12 @@ version = `cat VERSION`
 test: ## Run tests
 	go test -v ./...
 
+.PHONY: run
+run: ## Run tmpl
+	go run ./cmd/tmpl
+
 .PHONY: build
-build:
+build: ## Build binaries
 	rm -rf ./bin && mkdir ./bin
 
 	GOOS=linux GOARCH=386 go build -ldflags "-X main.version=$(version)" -o ./bin/tmpl-linux-386 ./cmd/tmpl
