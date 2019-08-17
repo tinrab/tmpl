@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bytes"
 	"io"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/tinrab/tmpl"
 )
@@ -30,10 +30,21 @@ var rootCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.Flags().StringVarP(&parametersPath, "parameters", "p", "", "path to parameters")
+	_ = rootCmd.MarkFlagRequired("parameters")
 	rootCmd.Flags().StringVarP(&sourcesPath, "source", "s", "", "path to sources")
+	_ = rootCmd.MarkFlagRequired("source")
 	rootCmd.Flags().StringVarP(&delimiter, "delimiter", "d", "\n", "template delimiter")
 	rootCmd.Flags().StringVarP(&outputPath, "output", "o", "tmpl.out", "output file path")
 	rootCmd.Flags().BoolVarP(&test, "test", "t", false, "print result to stdout")
+
+	rootCmd.Flags().String("consul-address", "", "consul address")
+	_ = viper.BindPFlag("consul-address", rootCmd.Flags().Lookup("consul-address"))
+	rootCmd.Flags().String("consul-token", "", "consul token")
+	_ = viper.BindPFlag("consul-token", rootCmd.Flags().Lookup("consul-token"))
+
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
+	viper.SetEnvPrefix("tmpl")
+	viper.AutomaticEnv()
 }
 
 func run() error {
@@ -50,7 +61,21 @@ func run() error {
 		delimiter = strings.ReplaceAll(delimiter, "\\"+escaped, original)
 	}
 
-	results, err := tmpl.GenerateFromFiles(parametersPath, sourcesPath)
+	parametersMap, err := tmpl.LoadParameters(parametersPath)
+	if err != nil {
+		return err
+	}
+	sources, err := tmpl.LoadSources(sourcesPath)
+	if err != nil {
+		return err
+	}
+	options := tmpl.Options{
+		Parameters:   parametersMap,
+		Sources:      sources,
+		ConsulConfig: getConsulConfig(),
+	}
+
+	results, err := tmpl.Generate(options)
 	if err != nil {
 		return err
 	}
@@ -65,9 +90,23 @@ func run() error {
 		defer f.Close()
 		w = f
 	}
+	return writeResults(results, w)
+}
 
+func getConsulConfig() *tmpl.ConsulConfig {
+	var consulConfig *tmpl.ConsulConfig
+	if viper.GetString("consul-address") != "" {
+		consulConfig = &tmpl.ConsulConfig{
+			Address: viper.GetString("consul-address"),
+			Token:   viper.GetString("consul-token"),
+		}
+	}
+	return consulConfig
+}
+
+func writeResults(results []tmpl.Result, w io.Writer) error {
 	for i, r := range results {
-		_, err := w.Write(bytes.TrimSpace(r.Data))
+		_, err := w.Write(r.Data)
 		if err != nil {
 			return err
 		}

@@ -1,0 +1,2 @@
+{{.title}}
+{{consul "admin/name"}}, {{consul "admin/email"}}

@@ -17,7 +17,7 @@ go get github.com/tinrab/tmpl/cmd/tmpl
 Example:
 
 ```
-$ tmpl -p "./test/*.params.*" -s ./test/deployment.tmpl.yaml -t
+$ tmpl -p "./test/simple/*.params.*" -s ./test/simple/deployment.tmpl.yaml -t
 ```
 
 Help:
@@ -34,12 +34,14 @@ Available Commands:
   version     Print version
 
 Flags:
-  -d, --delimiter string    template delimiter (default "\n")
-  -h, --help                help for tmpl
-  -o, --output string       output file path (default "tmpl.out")
-  -p, --parameters string   path to parameters
-  -s, --source string       path to sources
-  -t, --test                print result to stdout
+      --consul-address string   consul address
+      --consul-token string     consul token
+  -d, --delimiter string        template delimiter (default "\n")
+  -h, --help                    help for tmpl
+  -o, --output string           output file path (default "tmpl.out")
+  -p, --parameters string       path to parameters
+  -s, --source string           path to sources
+  -t, --test                    print result to stdout
 
 Use "tmpl [command] --help" for more information about a command.
 ```

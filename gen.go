@@ -2,8 +2,10 @@ package tmpl
 
 import (
 	"bytes"
-	"html/template"
-	"io/ioutil"
+	"encoding/json"
+	"text/template"
+
+	"gopkg.in/yaml.v2"
 )
 
 type Source struct {
@@ -17,14 +19,22 @@ type Result struct {
 }
 
 type Options struct {
-	Parameters ParameterMap
-	Sources    []Source
+	Parameters   ParameterMap
+	Sources      []Source
+	ConsulConfig *ConsulConfig
 }
 
 func Generate(options Options) ([]Result, error) {
+	fm, err := buildFunctions(options)
+	if err != nil {
+		return nil, err
+	}
+
 	var results []Result
 	for _, src := range options.Sources {
-		tmpl, err := template.New("").Parse(src.Value)
+		tmpl, err := template.New("").
+			Funcs(fm).
+			Parse(src.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -40,36 +50,34 @@ func Generate(options Options) ([]Result, error) {
 	return results, nil
 }
 
-func GenerateFromFiles(parametersPath string, sourcesPath string) ([]Result, error) {
-	parameterFiles, err := findFiles(parametersPath)
-	if err != nil {
-		return nil, err
-	}
-	sourceFiles, err := findFiles(sourcesPath)
-	if err != nil {
+func buildFunctions(options Options) (template.FuncMap, error) {
+	fm := template.FuncMap{}
+
+	if err := buildConsulFunctionMap(options, fm); err != nil {
 		return nil, err
 	}
 
-	pm, err := parseParameterMap(parameterFiles)
-	if err != nil {
-		return nil, err
+	fm["json"] = func(v interface{}) string {
+		js, _ := json.Marshal(v)
+		return string(js)
 	}
-
-	var sources []Source
-	for _, f := range sourceFiles {
-		data, err := ioutil.ReadFile(f)
-		if err != nil {
+	fm["jsonParse"] = func(s string) (map[string]interface{}, error) {
+		data := map[string]interface{}{}
+		if err := json.Unmarshal([]byte(s), &data); err != nil {
 			return nil, err
 		}
-		sources = append(sources, Source{
-			Name:  f,
-			Value: string(data),
-		})
+		return data, nil
 	}
-
-	options := Options{
-		Parameters: pm,
-		Sources:    sources,
+	fm["yaml"] = func(v interface{}) string {
+		ym, _ := yaml.Marshal(v)
+		return string(ym)
 	}
-	return Generate(options)
+	fm["yamlParse"] = func(s string) (map[string]interface{}, error) {
+		data := map[string]interface{}{}
+		if err := yaml.Unmarshal([]byte(s), &data); err != nil {
+			return nil, err
+		}
+		return data, nil
+	}
+	return fm, nil
 }
