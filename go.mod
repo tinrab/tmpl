@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/hashicorp/consul/api v1.1.0
+	github.com/hashicorp/vault/api v1.0.4
 	github.com/imdario/mergo v0.3.7
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/pelletier/go-toml v1.4.0 // indirect

@@ -1,2 +1,3 @@
 {{.title}}
 {{consul "admin/name"}}, {{consul "admin/email"}}
+{{vault "secret/data/admin" ""}}

@@ -41,6 +41,9 @@ func buildConsulFunctionMap(options Options, m template.FuncMap) error {
 		if err != nil {
 			return "", err
 		}
+		if pair == nil || len(pair.Value) == 0 {
+			return "", nil
+		}
 		return string(pair.Value), nil
 	}
 

@@ -22,6 +22,7 @@ type Options struct {
 	Parameters   ParameterMap
 	Sources      []Source
 	ConsulConfig *ConsulConfig
+	VaultConfig  *VaultConfig
 }
 
 func Generate(options Options) ([]Result, error) {
@@ -54,6 +55,9 @@ func buildFunctions(options Options) (template.FuncMap, error) {
 	fm := template.FuncMap{}
 
 	if err := buildConsulFunctionMap(options, fm); err != nil {
+		return nil, err
+	}
+	if err := buildVaultFunctionMap(options, fm); err != nil {
 		return nil, err
 	}
 

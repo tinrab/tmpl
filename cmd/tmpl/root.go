@@ -42,6 +42,11 @@ func init() {
 	rootCmd.Flags().String("consul-token", "", "consul token")
 	_ = viper.BindPFlag("consul-token", rootCmd.Flags().Lookup("consul-token"))
 
+	rootCmd.Flags().String("vault-address", "", "vault address")
+	_ = viper.BindPFlag("vault-address", rootCmd.Flags().Lookup("vault-address"))
+	rootCmd.Flags().String("vault-token", "", "vault token")
+	_ = viper.BindPFlag("vault-token", rootCmd.Flags().Lookup("vault-token"))
+
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.SetEnvPrefix("tmpl")
 	viper.AutomaticEnv()
@@ -73,6 +78,7 @@ func run() error {
 		Parameters:   parametersMap,
 		Sources:      sources,
 		ConsulConfig: getConsulConfig(),
+		VaultConfig:  getVaultConfig(),
 	}
 
 	results, err := tmpl.Generate(options)
@@ -102,6 +108,17 @@ func getConsulConfig() *tmpl.ConsulConfig {
 		}
 	}
 	return consulConfig
+}
+
+func getVaultConfig() *tmpl.VaultConfig {
+	var vaultConfig *tmpl.VaultConfig
+	if viper.GetString("vault-address") != "" {
+		vaultConfig = &tmpl.VaultConfig{
+			Address: viper.GetString("vault-address"),
+			Token:   viper.GetString("vault-token"),
+		}
+	}
+	return vaultConfig
 }
 
 func writeResults(results []tmpl.Result, w io.Writer) error {
